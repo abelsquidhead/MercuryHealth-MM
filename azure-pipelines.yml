@@ -1,21 +1,69 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+resources:
 
-trigger:
-- master
+- repo: self
+
+
 
 pool:
-  vmImage: 'Ubuntu-16.04'
+
+  vmImage: Hosted Ubuntu 1604
+
+  demands: npm
+
+
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '8.x'
-  displayName: 'Install Node.js'
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+- task: Npm@1
+
+  displayName: 'npm install'
+
+  inputs:
+
+    verbose: false
+
+
+
+- bash: |
+   # Write your commands here
+   cat > .env << EOF
+   PRODUCT_SERVICE_BASE_URL=https://abeltailwindproductservice.azurewebsites.net
+   INVENTORY_SERVICE_BASE_URL=https://abelinventoryserviceapi.azurewebsites.net
+   EOF
+   # Use the environment variables input below to pass secret variables to this script
+
+  displayName: 'Set up DB Connection'
+
+
+
+- bash: |
+   # Write your commands here
+   npm run build
+   ls
+   # Use the environment variables input below to pass secret variables to this script
+
+  displayName: 'Build App'
+
+
+
+- task: ArchiveFiles@2
+
+  displayName: 'Archive dist Folder'
+
+
+
+- task: CopyFiles@2
+
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+
+  inputs:
+
+    Contents: '**/*.zip'
+
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+
+
+- task: PublishBuildArtifacts@1
+
+  displayName: 'Publish Artifact: drop'
